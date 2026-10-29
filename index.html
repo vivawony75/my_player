@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mymy | 레트로 카세트 플레이어</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="is-locked">
+  <!-- 상단 헤더: 좌측 로고 + 우측 상단 로그인 & Firebase 아이콘 -->
+  <header class="top-nav">
+    <div class="brand-group" onclick="app.scrollToSection('section-hero', true)" role="button" tabindex="0">
+      <span class="brand-mymy">mymy</span>
+      <span class="brand-model">MY-F65</span>
+    </div>
+
+    <div class="top-right-controls">
+      <!-- 오른쪽 상단 아이디/비밀번호 메뉴 -->
+      <div id="topRightAuthMenu" class="top-auth-menu">
+        <form id="authLoggedOutForm" class="auth-inline-form" onsubmit="app.handleLoginSubmit(event)">
+          <input
+            type="text"
+            id="authUserIdInput"
+            class="auth-input"
+            placeholder="아이디"
+            autocomplete="username"
+            required
+          />
+          <input
+            type="password"
+            id="authPasswordInput"
+            class="auth-input"
+            placeholder="비밀번호"
+            autocomplete="current-password"
+            required
+          />
+          <button type="submit" class="auth-btn login-submit-btn">로그인</button>
+          <button type="button" class="auth-btn register-btn" onclick="app.handleRegisterClick()" title="입력한 아이디/비밀번호로 계정 생성">
+            등록
+          </button>
+        </form>
+
+        <div id="authLoggedInBox" class="auth-logged-in hidden">
+          <span class="user-session-badge">
+            <strong id="loggedInUserId">admin</strong>
+          </span>
+          <button type="button" class="auth-btn logout-btn" onclick="app.handleLogout()">
+            로그아웃
+          </button>
+        </div>
+      </div>
+
+      <button type="button" id="cloudConfigBtn" class="cloud-btn" onclick="app.openCloudModal()" title="Firebase 연동 설정">
+        <span id="cloudStatusDot" class="status-dot local"></span>
+        <span id="cloudStatusText">Firebase</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="scroll-container">
+    <!-- ================= 1. 상단 메인: 마이마이(mymy) 이미지 플레이어 & 메뉴 ================= -->
+    <section id="section-hero" class="hero-section">
+      <!-- 미니멀 상태 표시 바 (현재 곡 & 진행 바) -->
+      <div class="minimal-status-bar">
+        <div class="status-top">
+          <span id="heroLcdState" class="status-pill">LOCKED</span>
+          <span id="heroTrackTitle" class="status-title">오른쪽 상단에서 로그인 후 사용할 수 있습니다</span>
+          <span class="status-time"><span id="heroTimeCurrent">00:00</span> / <span id="heroTimeTotal">00:00</span></span>
+        </div>
+        <input
+          type="range"
+          id="seekSlider"
+          class="minimal-seek"
+          min="0"
+          max="100"
+          step="0.1"
+          value="0"
+          aria-label="재생 위치 조절"
+        />
+      </div>
+
+      <!-- 마이마이 이미지 & 물리 버튼 핫스팟 (유일한 컨트롤러 & 메뉴) -->
+      <div class="mymy-image-wrapper">
+        <div class="mymy-photo-frame">
+          <img
+            src="assets/mymy-player.jpg"
+            alt="삼성 마이마이 MY-F65 카세트 플레이어"
+            class="mymy-photo"
+            draggable="false"
+          />
+
+          <!-- 카세트 창 회전 릴 -->
+          <div class="tape-reel-overlay" aria-hidden="true">
+            <div class="reel-spindle"></div>
+          </div>
+
+          <!-- 우측 상단 BATTERY 3연동 LED -->
+          <div class="battery-led-group" aria-hidden="true">
+            <span class="led-lamp led-1"></span>
+            <span class="led-lamp led-2"></span>
+            <span class="led-lamp led-3"></span>
+          </div>
+
+          <!-- [볼륨 조절] 좌측 하단 은색 다이얼 -->
+          <div class="hotspot hs-volume-wrap" style="left: 32.2%; top: 73.5%;">
+            <button
+              type="button"
+              class="hs-trigger"
+              onclick="app.toggleVolumePopover()"
+              id="hsVolume"
+              title="볼륨 조절 (클릭 또는 마우스 휠)"
+            >
+              <span class="hs-ring"></span>
+              <span class="hs-callout callout-left">
+                <strong>VOL <span id="volumeValueLabel">80%</span></strong>
+              </span>
+            </button>
+
+            <!-- 다이얼 클릭 시 열리는 미니 볼륨 팝오버 -->
+            <div id="volumePopover" class="volume-popover hidden">
+              <input
+                type="range"
+                id="masterVolumeSlider"
+                min="0"
+                max="100"
+                value="80"
+                aria-label="볼륨 조절"
+              />
+              <button type="button" class="mute-mini-btn" id="muteBtn" onclick="app.toggleMute()">🔊</button>
+            </div>
+          </div>
+
+          <!-- [STOP] 재생 정지 및 처음으로(00:00) 복귀 -->
+          <button
+            type="button"
+            class="hotspot hs-stop"
+            style="left: 49.5%; top: 74.0%;"
+            onclick="app.handleHeroButton('stop')"
+            title="STOP: 재생 정지 (00:00 초기화)"
+          >
+            <span class="hs-key-cap stop-cap"></span>
+            <span class="hs-callout callout-stop">
+              <strong>■ STOP</strong>
+            </span>
+          </button>
+
+          <!-- [PLAY] 선택된 곡들만 재생 / 일시정지 -->
+          <button
+            type="button"
+            class="hotspot hs-play"
+            style="left: 58.5%; top: 68.0%;"
+            onclick="app.handleHeroButton('play')"
+            title="PLAY: 선택된 곡 재생 / 일시정지"
+          >
+            <span class="hs-key-cap"></span>
+            <span class="hs-callout callout-top-left">
+              <strong id="playCalloutLabel">▶ PLAY</strong>
+            </span>
+          </button>
+
+          <!-- [REC] 플레이할 음악 선정 섹션으로 스크롤 -->
+          <button
+            type="button"
+            class="hotspot hs-rec"
+            style="left: 68.0%; top: 60.5%;"
+            onclick="app.handleHeroButton('rec')"
+            title="REC: 플레이할 음악 선정"
+          >
+            <span class="hs-key-cap rec-cap"></span>
+            <span class="hs-callout callout-top-right">
+              <strong>● REC</strong>
+            </span>
+          </button>
+
+          <!-- [REW] 되감기: 한 곡 뒤로 -->
+          <button
+            type="button"
+            class="hotspot hs-rew"
+            style="left: 51.5%; top: 82.0%;"
+            onclick="app.handleHeroButton('rew')"
+            title="되감기: 이전 곡"
+          >
+            <span class="hs-key-cap"></span>
+            <span class="hs-callout callout-bottom-left">
+              <strong>⏮ 되감기</strong>
+            </span>
+          </button>
+
+          <!-- [FF] 감기: 한 곡 앞으로 -->
+          <button
+            type="button"
+            class="hotspot hs-ff"
+            style="left: 60.0%; top: 75.5%;"
+            onclick="app.handleHeroButton('ff')"
+            title="감기: 다음 곡"
+          >
+            <span class="hs-key-cap"></span>
+            <span class="hs-callout callout-bottom-mid">
+              <strong>⏭ 감기</strong>
+            </span>
+          </button>
+
+          <!-- [EJECT] 파일 업로드 & 삭제 섹션으로 스크롤 -->
+          <button
+            type="button"
+            class="hotspot hs-eject"
+            style="left: 67.5%; top: 69.5%;"
+            onclick="app.handleHeroButton('eject')"
+            title="EJECT: 파일 업로드 & 삭제"
+          >
+            <span class="hs-key-cap eject-cap"></span>
+            <span class="hs-callout callout-bottom-right">
+              <strong>⏏ EJECT</strong>
+            </span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 2. REC 섹션: 플레이할 음악 선정하기 ================= -->
+    <section id="section-rec" class="content-section">
+      <div class="section-inner">
+        <div class="section-header">
+          <div class="section-title-group">
+            <span class="section-tag rec-tag">● REC</span>
+            <h2>플레이할 음악 선정</h2>
+            <span id="recStatusBadge" class="sub-count">0 / 0곡 선택됨</span>
+          </div>
+          <div class="section-header-actions">
+            <button type="button" class="text-btn" onclick="app.selectAllTracks(true)">전체선택</button>
+            <button type="button" class="text-btn" onclick="app.selectAllTracks(false)">전체해제</button>
+            <button type="button" class="up-btn" onclick="app.scrollToSection('section-hero', true)">▲ 플레이어</button>
+          </div>
+        </div>
+
+        <ul id="recTrackList" class="track-list"></ul>
+      </div>
+    </section>
+
+    <!-- ================= 3. EJECT 섹션: 파일 업로드 & 삭제 ================= -->
+    <section id="section-eject" class="content-section">
+      <div class="section-inner">
+        <div class="section-header">
+          <div class="section-title-group">
+            <span class="section-tag eject-tag">⏏ EJECT</span>
+            <h2>파일 업로드 &amp; 삭제</h2>
+            <span id="storageSummaryText" class="sub-count">0곡 · 0 KB</span>
+          </div>
+          <div class="section-header-actions">
+            <button type="button" class="text-btn" onclick="app.addSampleTracks()">+ 샘플음원</button>
+            <button type="button" class="text-btn danger" onclick="app.confirmDeleteAll()">전체삭제</button>
+            <button type="button" class="up-btn" onclick="app.scrollToSection('section-hero', true)">▲ 플레이어</button>
+          </div>
+        </div>
+
+        <!-- 심플 파일 업로드 바 -->
+        <div
+          id="dropZone"
+          class="minimal-dropzone"
+          onclick="document.getElementById('audioFileInput').click()"
+        >
+          <span><strong>+ 음악 파일 업로드</strong> (클릭 또는 파일 드래그 · 음질 무손실 최소용량 자동 저장)</span>
+          <input
+            type="file"
+            id="audioFileInput"
+            accept="audio/*,.mp3,.wav,.flac,.m4a,.aac,.ogg,.opus,.webm"
+            multiple
+            hidden
+          />
+        </div>
+
+        <div id="uploadProgressBox" class="upload-progress-box hidden">
+          <span id="uploadProgressText">최적화 중...</span>
+          <span id="uploadProgressPercent">0%</span>
+        </div>
+
+        <ul id="ejectTrackList" class="track-list"></ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- 토스트 알림 -->
+  <div id="retroToast" class="retro-toast hidden" role="status" aria-live="polite"></div>
+
+  <!-- Firebase 연동 설정 모달 -->
+  <div id="cloudModal" class="modal-backdrop hidden" onclick="if(event.target===this) app.closeCloudModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>☁️ Firebase 연동 설정</h3>
+        <button type="button" class="close-btn" onclick="app.closeCloudModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          Firebase 웹 앱의 <code>firebaseConfig</code>를 붙여넣으면 Auth · Firestore · Storage가 연동됩니다.
+        </p>
+        <textarea
+          id="firebaseConfigInput"
+          rows="6"
+          placeholder='apiKey: "...", projectId: "...", storageBucket: "..."'
+        ></textarea>
+        <div class="modal-btn-row">
+          <button type="button" class="auth-btn login-submit-btn" onclick="app.saveFirebaseConfig()">저장 및 연결</button>
+          <button type="button" class="auth-btn register-btn" onclick="app.clearFirebaseConfig()">로컬 모드로 전환</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <audio id="mainAudioElement" preload="auto"></audio>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+
+  <script src="firebase-config.js"></script>
+  <script src="audio-compressor.js"></script>
+  <script src="storage-service.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

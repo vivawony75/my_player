@@ -1,0 +1,745 @@
+:root {
+  --mymy-pink: #f49db6;
+  --mymy-pink-deep: #e06d91;
+  --mymy-pink-soft: #fde8ef;
+  --charcoal: #1d1e24;
+  --silver-border: #d4d8e2;
+  --rec-red: #ff3b4e;
+  --play-green: #10b981;
+  --eject-amber: #f59e0b;
+  --text-main: #22232a;
+  --text-muted: #6b7280;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--text-main);
+  background: #fff9fb;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ================= 상단 미니멀 헤더 ================= */
+.top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px;
+  background: rgba(255, 249, 251, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(244, 157, 182, 0.35);
+}
+
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.brand-mymy {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--mymy-pink-deep);
+}
+
+.brand-model {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  background: var(--mymy-pink-soft);
+  padding: 2px 7px;
+  border-radius: 999px;
+}
+
+/* 우측 상단 로그인 & Firebase 바 */
+.top-right-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.top-auth-menu {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1.5px solid rgba(224, 109, 145, 0.4);
+  border-radius: 999px;
+  padding: 4px 8px;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.top-auth-menu.highlight-pulse {
+  box-shadow: 0 0 0 4px rgba(255, 59, 78, 0.35);
+  border-color: var(--rec-red);
+}
+
+.auth-inline-form {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.auth-input {
+  width: 96px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--silver-border);
+  background: #f9fafb;
+  font-size: 0.76rem;
+  outline: none;
+}
+
+.auth-input:focus {
+  border-color: var(--mymy-pink-deep);
+  background: #fff;
+}
+
+.auth-btn {
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.login-submit-btn {
+  background: var(--mymy-pink-deep);
+  color: #fff;
+}
+
+.register-btn {
+  background: #f3f4f6;
+  color: var(--charcoal);
+  border-color: var(--silver-border);
+}
+
+.auth-logged-in {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 1px 4px;
+  font-size: 0.8rem;
+}
+
+.user-session-badge strong {
+  color: var(--mymy-pink-deep);
+}
+
+.logout-btn {
+  background: var(--charcoal);
+  color: #fff;
+}
+
+.cloud-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(224, 109, 145, 0.35);
+  background: #fff;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.status-dot.local { background: var(--eject-amber); }
+.status-dot.firebase { background: var(--play-green); }
+
+/* ================= 1. 상단 마이마이 이미지 플레이어 섹션 ================= */
+.hero-section {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 28px 20px 44px;
+  min-height: calc(100vh - 58px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+}
+
+/* 한 줄 미니멀 상태 표시 바 */
+.minimal-status-bar {
+  background: var(--charcoal);
+  color: #fff;
+  border-radius: 16px;
+  padding: 12px 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.status-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.status-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #4b5563;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.status-pill.playing {
+  background: var(--play-green);
+}
+
+.status-pill.paused {
+  background: var(--eject-amber);
+}
+
+.status-pill.stopped {
+  background: var(--rec-red);
+}
+
+.status-title {
+  flex: 1;
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.76rem;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.minimal-seek {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 5px;
+  background: #374151;
+  border-radius: 999px;
+  outline: none;
+  cursor: pointer;
+}
+
+.minimal-seek::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--mymy-pink);
+  cursor: pointer;
+}
+
+/* 마이마이 이미지 본체 & 핫스팟 */
+.mymy-image-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.mymy-photo-frame {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  background: #fff;
+  border-radius: 28px;
+  padding: 16px;
+  border: 1.5px solid rgba(244, 157, 182, 0.45);
+  box-shadow: 0 18px 45px rgba(224, 109, 145, 0.15);
+  user-select: none;
+}
+
+.mymy-photo {
+  width: 100%;
+  height: auto;
+  display: block;
+  mix-blend-mode: multiply;
+}
+
+/* 회전 카세트 릴 오버레이 */
+.tape-reel-overlay {
+  position: absolute;
+  left: 39.2%;
+  top: 39.5%;
+  width: 42px;
+  height: 42px;
+  transform: translate(-50%, -50%) rotateX(32deg) rotateZ(-25deg);
+  pointer-events: none;
+}
+
+.reel-spindle {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 3px dashed rgba(255, 255, 255, 0.55);
+}
+
+body.is-playing .reel-spindle {
+  animation: spinReel 2.2s linear infinite;
+  border-color: #fff;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+}
+
+@keyframes spinReel {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 우측 상단 BATTERY 3연동 LED */
+.battery-led-group {
+  position: absolute;
+  left: 82.8%;
+  top: 29.2%;
+  display: flex;
+  gap: 8px;
+  transform: rotate(-28deg);
+  pointer-events: none;
+}
+
+.led-lamp {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 70, 90, 0.2);
+}
+
+body.is-playing .led-lamp.led-1 { background: #ff2a4b; box-shadow: 0 0 8px #ff2a4b; }
+body.is-playing .led-lamp.led-2 { background: #ff5e3a; box-shadow: 0 0 8px #ff5e3a; }
+body.is-playing .led-lamp.led-3 { background: #10b981; box-shadow: 0 0 8px #10b981; }
+
+/* 핫스팟 버튼 */
+.hotspot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 10;
+  padding: 0;
+}
+
+.hs-trigger {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+}
+
+.hs-ring {
+  display: block;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--mymy-pink-deep);
+  background: rgba(244, 157, 182, 0.25);
+  transition: transform 0.15s ease;
+}
+
+.hs-key-cap {
+  display: block;
+  width: 34px;
+  height: 24px;
+  border-radius: 6px;
+  transform: rotate(-28deg);
+  border: 2px solid rgba(30, 32, 42, 0.7);
+  background: rgba(255, 255, 255, 0.6);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.hs-key-cap.stop-cap {
+  border-color: var(--charcoal);
+  background: rgba(29, 30, 36, 0.35);
+}
+
+.hs-key-cap.rec-cap {
+  border-color: var(--rec-red);
+  background: rgba(255, 59, 78, 0.35);
+}
+
+.hs-key-cap.eject-cap {
+  border-color: var(--eject-amber);
+  background: rgba(245, 158, 11, 0.35);
+}
+
+.hotspot:hover .hs-key-cap,
+.hs-trigger:hover .hs-ring {
+  transform: rotate(-28deg) scale(1.12);
+  box-shadow: 0 0 12px var(--mymy-pink-deep);
+}
+
+/* 간결한 핫스팟 라벨 */
+.hs-callout {
+  position: absolute;
+  background: rgba(29, 30, 36, 0.9);
+  color: #fff;
+  padding: 4px 9px;
+  border-radius: 8px;
+  white-space: nowrap;
+  font-size: 0.74rem;
+  font-family: 'Space Grotesk', 'IBM Plex Sans KR', sans-serif;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+.hotspot:hover .hs-callout,
+.hs-trigger:hover .hs-callout {
+  background: var(--mymy-pink-deep);
+}
+
+.callout-left { right: 42px; top: 4px; }
+.callout-stop { bottom: 28px; right: 6px; }
+.callout-top-left { bottom: 30px; left: -16px; }
+.callout-top-right { bottom: 32px; left: 6px; }
+.callout-bottom-left { top: 28px; right: 4px; }
+.callout-bottom-mid { top: 30px; left: -8px; }
+.callout-bottom-right { top: 22px; left: 26px; }
+
+/* 볼륨 미니 팝오버 (다이얼 바로 옆) */
+.volume-popover {
+  position: absolute;
+  right: 44px;
+  top: 38px;
+  background: var(--charcoal);
+  padding: 8px 12px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  z-index: 25;
+}
+
+.volume-popover input[type="range"] {
+  width: 90px;
+  height: 5px;
+  accent-color: var(--mymy-pink);
+  cursor: pointer;
+}
+
+.mute-mini-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+/* ================= 2 & 3. REC / EJECT 미니멀 섹션 ================= */
+.content-section {
+  padding: 48px 20px;
+  border-top: 1px solid rgba(244, 157, 182, 0.35);
+}
+
+.section-inner {
+  max-width: 680px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 20px;
+  border: 1.5px solid rgba(244, 157, 182, 0.4);
+  padding: 22px;
+  box-shadow: 0 10px 28px rgba(34, 24, 30, 0.06);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3e8ee;
+}
+
+.section-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-tag {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  color: #fff;
+}
+.rec-tag { background: var(--rec-red); }
+.eject-tag { background: var(--charcoal); }
+
+.section-title-group h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.sub-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.section-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.text-btn,
+.up-btn {
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--silver-border);
+  background: #fff;
+  color: var(--charcoal);
+}
+
+.text-btn.danger {
+  color: var(--rec-red);
+  border-color: rgba(255, 59, 78, 0.35);
+}
+
+.up-btn {
+  background: var(--mymy-pink-soft);
+  color: var(--mymy-pink-deep);
+  border-color: rgba(224, 109, 145, 0.35);
+}
+
+/* 미니멀 파일 업로드 바 */
+.minimal-dropzone {
+  border: 2px dashed var(--mymy-pink-deep);
+  background: #fff9fb;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-bottom: 14px;
+  transition: background 0.15s ease;
+}
+
+.minimal-dropzone:hover,
+.minimal-dropzone.dragover {
+  background: var(--mymy-pink-soft);
+}
+
+.upload-progress-box {
+  display: flex;
+  justify-content: space-between;
+  background: var(--charcoal);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  margin-bottom: 12px;
+}
+
+/* 트랙 리스트 */
+.track-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.track-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #eef0f5;
+  background: #fafbfd;
+}
+
+.track-item.active-playing {
+  border-color: var(--mymy-pink-deep);
+  background: var(--mymy-pink-soft);
+}
+
+.track-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.track-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.rec-select-btn {
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1.5px solid #d1d5db;
+  background: #fff;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.rec-select-btn.is-selected {
+  border-color: var(--rec-red);
+  background: #fff1f2;
+  color: var(--rec-red);
+}
+
+.delete-item-btn {
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 59, 78, 0.35);
+  background: #fff;
+  color: var(--rec-red);
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.delete-item-btn:hover {
+  background: var(--rec-red);
+  color: #fff;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 24px 12px;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+}
+
+/* 비로그인 잠금 시 흐림 처리 */
+body.is-locked .content-section .section-inner {
+  opacity: 0.5;
+  filter: grayscale(0.4);
+}
+
+/* 토스트 & 모달 */
+.retro-toast {
+  position: fixed;
+  top: 64px;
+  right: 20px;
+  z-index: 200;
+  background: var(--charcoal);
+  color: #fff;
+  border-left: 4px solid var(--mymy-pink-deep);
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(18, 19, 24, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal-card {
+  background: #fff;
+  width: 100%;
+  max-width: 460px;
+  border-radius: 16px;
+  border: 1.5px solid var(--mymy-pink);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--mymy-pink-soft);
+}
+
+.modal-header h3 {
+  font-size: 0.95rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 18px;
+}
+
+.modal-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+#firebaseConfigInput {
+  width: 100%;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.76rem;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--silver-border);
+  margin-bottom: 10px;
+}
+
+.modal-btn-row {
+  display: flex;
+  gap: 8px;
+}
