@@ -23,26 +23,22 @@
 
 ---
 
-## 🚀 GitHub · Vercel · Firebase 연동 방법
+## 🚀 `my_player` 프로젝트의 Firebase(`myplayer-3df2c`) · GitHub · Vercel 연동
 
-### 1단계: Firebase 연동 (Cloud Firestore + Storage)
-1. [Firebase 콘솔](https://console.firebase.google.com/)에서 새 프로젝트를 생성합니다.
-2. **Build > Firestore Database** 및 **Build > Storage**를 활성화합니다.
-3. 프로젝트 설정(⚙️) > 일반 > 내 앱에서 **웹(`</>`)** 앱을 추가하고 `firebaseConfig` 값을 복사합니다.
-4. 사이트 우측 상단의 **`[로컬 저장소 + Firebase 설정]`** 버튼을 눌러 붙여넣거나, 폴더 내 `firebase-config.js` 파일에 입력합니다.
+### 1단계: Firebase(`myplayer-3df2c`) 웹 앱 설정값 확인 및 `.env` 입력
+1. [Firebase 콘솔 (`myplayer-3df2c`)](https://console.firebase.google.com/project/myplayer-3df2c/settings/general)의 **프로젝트 설정(⚙️) > 일반 > 내 앱**에서 웹 앱(`</>`)의 `firebaseConfig` 값을 확인합니다.
+2. 폴더 내 `.env` 파일(이미 `.gitignore`에 등록되어 GitHub에 노출되지 않음)에 `apiKey`, `messagingSenderId`, `appId`를 입력합니다 (`projectId`, `authDomain`, `storageBucket`은 `myplayer-3df2c`로 기본 설정 완료).
 
-### 2단계: GitHub 저장소 업로드
-바탕화면 `플레이어` 폴더에서 터미널(PowerShell)을 열고 아래 명령어를 실행합니다:
-```powershell
-git init
-git add .
-git commit -m "feat: initial mymy retro cassette player"
-git branch -M main
-git remote add origin https://github.com/<본인깃허브아이디>/<저장소이름>.git
-git push -u origin main
-```
+### 2단계: GitHub(`my_player`) 저장소에 코드 업로드
+- 바탕화면 `플레이어` 폴더 안의 파일들을 GitHub `my_player` 저장소에 업로드(또는 `git push`)합니다.
+- `.gitignore`에 `.env`와 `.env.local`이 포함되어 있어 로컬 `.env` 파일은 안전하게 제외됩니다.
 
-### 3단계: Vercel 배포 연동
-1. [Vercel 대시보드](https://vercel.com/new)에 로그인합니다.
-2. 방금 푸시한 **GitHub 저장소를 Import** 한 뒤 **Deploy** 버튼을 누릅니다.
-3. 이후 GitHub에 코드를 푸시할 때마다 Vercel 사이트가 자동으로 업데이트됩니다.
+### 3단계: Vercel 배포 및 Environment Variables(환경 변수) 등록
+1. Vercel 대시보드에서 `my_player` 저장소를 Import(또는 기존 프로젝트의 **Settings > Environment Variables**로 이동)합니다.
+2. 아래 환경 변수 키와 Firebase에서 복사한 값을 입력한 뒤 **Deploy(또는 Redeploy)** 를 클릭하면 `/api/firebase-config` 엔드포인트를 통해 자동으로 연동됩니다:
+   - `NEXT_PUBLIC_FIREBASE_API_KEY`
+   - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` (`myplayer-3df2c.firebaseapp.com`)
+   - `NEXT_PUBLIC_FIREBASE_PROJECT_ID` (`myplayer-3df2c`)
+   - `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` (`myplayer-3df2c.firebasestorage.app`)
+   - `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+   - `NEXT_PUBLIC_FIREBASE_APP_ID`

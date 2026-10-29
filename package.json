@@ -1,19 +1,6 @@
 {
   "name": "mymy-retro-cassette-player",
   "version": "1.0.0",
-  "description": "Samsung mymy (MY-F65) Retro Scroll Music Player with Firebase, GitHub & Vercel integration",
-  "private": true,
-  "scripts": {
-    "start": "npx serve . -l 3000",
-    "dev": "npx serve . -l 3000",
-    "build": "echo 'Static site ready for Vercel deployment'"
-  },
-  "keywords": [
-    "music-player",
-    "retro",
-    "cassette",
-    "mymy",
-    "firebase",
-    "vercel"
-  ]
+  "description": "Samsung mymy (MY-F65) Retro Scroll Music Player",
+  "private": true
 }

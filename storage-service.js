@@ -220,10 +220,13 @@ class MymyStorageService {
   }
 
   /**
-   * 저장된 Firebase 설정 또는 firebase-config.js를 읽어 Firebase SDK 초기화
+   * 저장된 Firebase 설정, Vercel 환경 변수(/api/firebase-config), 로컬 .env, 또는 firebase-config.js를 읽어 Firebase SDK 초기화
    */
   async tryInitFirebase() {
-    const config = this.getActiveFirebaseConfig();
+    let config = this.getActiveFirebaseConfig();
+    if (!config || !config.apiKey || !config.projectId) {
+      config = await this.fetchEnvFirebaseConfig();
+    }
     if (!config || !config.apiKey || !config.projectId) {
       this.isFirebaseConnected = false;
       return false;
@@ -255,6 +258,76 @@ class MymyStorageService {
       this.firebaseError = err.message;
       return false;
     }
+  }
+
+  /**
+   * Vercel Serverless 환경변수 엔드포인트(/api/firebase-config) 또는 로컬 .env 파일에서 설정 로드
+   */
+  async fetchEnvFirebaseConfig() {
+    if (window.location.protocol === 'file:') return null;
+
+    // 1. Vercel Environment Variables (/api/firebase-config) 조회
+    try {
+      const res = await fetch('/api/firebase-config', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.apiKey && data.projectId) {
+          window.DEFAULT_FIREBASE_CONFIG = data;
+          return data;
+        }
+      }
+    } catch (e) {
+      // ignore if not running on Vercel
+    }
+
+    // 2. 로컬 개발 서버에서 .env.local 또는 .env 파일 파싱 시도
+    for (const envPath of ['/.env.local', '/.env']) {
+      try {
+        const res = await fetch(envPath, { cache: 'no-store' });
+        if (res.ok) {
+          const text = await res.text();
+          const parsed = this.parseDotEnvFirebaseConfig(text);
+          if (parsed && parsed.apiKey && parsed.projectId) {
+            window.DEFAULT_FIREBASE_CONFIG = parsed;
+            return parsed;
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    return null;
+  }
+
+  parseDotEnvFirebaseConfig(envText = '') {
+    const map = {};
+    for (const line of String(envText).split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eqIdx = trimmed.indexOf('=');
+      if (eqIdx < 0) continue;
+      const key = trimmed.slice(0, eqIdx).trim();
+      const val = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, '');
+      map[key] = val;
+    }
+
+    const pick = (suffix, fallback = '') =>
+      map[`NEXT_PUBLIC_FIREBASE_${suffix}`] ||
+      map[`VITE_FIREBASE_${suffix}`] ||
+      map[`FIREBASE_${suffix}`] ||
+      fallback;
+
+    return {
+      apiKey: pick('API_KEY'),
+      authDomain: pick('AUTH_DOMAIN', 'myplayer-3df2c.firebaseapp.com'),
+      databaseURL: pick('DATABASE_URL', 'https://myplayer-3df2c-default-rtdb.firebaseio.com'),
+      projectId: pick('PROJECT_ID', 'myplayer-3df2c'),
+      storageBucket: pick('STORAGE_BUCKET', 'myplayer-3df2c.firebasestorage.app'),
+      messagingSenderId: pick('MESSAGING_SENDER_ID', '891023045874'),
+      appId: pick('APP_ID', '1:891023045874:web:1c404215652e5950ac4c6b'),
+      measurementId: pick('MEASUREMENT_ID', 'G-25D28SF5H0')
+    };
   }
 
   getActiveFirebaseConfig() {
@@ -292,13 +365,17 @@ class MymyStorageService {
       return match ? match[1].trim() : '';
     };
 
+    const envFallback = this.parseDotEnvFirebaseConfig(cleaned);
+
     const config = {
-      apiKey: extractField('apiKey'),
-      authDomain: extractField('authDomain'),
-      projectId: extractField('projectId'),
-      storageBucket: extractField('storageBucket'),
-      messagingSenderId: extractField('messagingSenderId'),
-      appId: extractField('appId')
+      apiKey: extractField('apiKey') || envFallback.apiKey,
+      authDomain: extractField('authDomain') || envFallback.authDomain || 'myplayer-3df2c.firebaseapp.com',
+      databaseURL: extractField('databaseURL') || envFallback.databaseURL || 'https://myplayer-3df2c-default-rtdb.firebaseio.com',
+      projectId: extractField('projectId') || envFallback.projectId || 'myplayer-3df2c',
+      storageBucket: extractField('storageBucket') || envFallback.storageBucket || 'myplayer-3df2c.firebasestorage.app',
+      messagingSenderId: extractField('messagingSenderId') || envFallback.messagingSenderId,
+      appId: extractField('appId') || envFallback.appId,
+      measurementId: extractField('measurementId') || envFallback.measurementId
     };
 
     if (!config.apiKey || !config.projectId) {
